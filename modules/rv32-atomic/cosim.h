@@ -23,6 +23,8 @@
 #include <simics/model-iface/execute.h>
 #include <simics/devs/frequency.h>
 
+#include <stdint.h>
+
 #include "cosim-local.h"
 
 typedef struct cosim_core cosim_core_t;

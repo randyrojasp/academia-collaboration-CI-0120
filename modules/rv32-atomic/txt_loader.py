@@ -10,14 +10,34 @@
 # implied warranties, other than those that are expressly stated in the License.
 
 import simics
-
+INSTRUCTIONS = {
+    "ebreak": 0x00100073,
+}
 
 def mem_write8(core, addr, value):
     """Write the byte value (0..255) to address addr of the core's memory."""
     simics.SIM_write_phys_memory(core, addr, value, 1)
 
-
 def load_program(core, path, address):
-    """Read the assembly program in the text file path and write the machine
-    code of its instructions into memory, the first one at address."""
-    # TODO
+    """function to load instruccion in format little-endian"""
+    with open(path, "r", encoding="utf-8") as archivo:
+        for num_linea, linea in enumerate(archivo, start=1):
+            # remove the comments
+            instruction = linea.split("#", 1)[0].strip()
+
+            # skip whitespace
+            if not instruction:
+                continue
+
+            try:
+                codigo = INSTRUCTIONS[instruction]
+            except KeyError:
+                raise ValueError(
+                    f"{path}:{num_linea}: instrucción no soportada: {instruction!r}"
+                ) from None
+
+            # write the bytes in little-endian order
+            for i, byte in enumerate(codigo.to_bytes(4, "little")):
+                mem_write8(core, address + i, byte)
+
+            address += 4

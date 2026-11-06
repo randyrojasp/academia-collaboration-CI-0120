@@ -12,6 +12,7 @@
 */
 
 #include <simics/util/strbuf.h>
+
 #include "cosim.h"
 #include "rv32-core.h"
 #include "rv32-helpers.h"
@@ -19,7 +20,23 @@
 void
 execute(rv32_t *cpu)
 {
-        /* TODO */
+        uint8 bytes[4];
+        if (!read_simics_memory(cpu, cpu->pc, bytes, sizeof bytes)){
+                rv32_halt(cpu, "Error to read the instruccion");
+                return;
+        }
+        uint32 instruccion = (uint32)bytes[0]
+                     | ((uint32)bytes[1] << 8)
+                     | ((uint32)bytes[2] << 16)
+                     | ((uint32)bytes[3] << 24);
+
+        if (instruccion == 0x00100073) {
+                ebreak(cpu);
+                return;
+        }
+        // TODO(any): change that
+        illegal_instruction(cpu, cpu->pc, instruccion);
+
 }
 
 /* Text for Simics' disassemble CLI command (e.g. "disassemble 0x0 10")
