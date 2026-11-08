@@ -42,6 +42,12 @@ execute_r_type(rv32_t *cpu, uint32 instr)
                         return false;
                 break;
 
+        case 0x1:
+                if (funct7 != 0x00)
+                        return false;
+                result = a << (b & 0x1F);
+                break;
+
         case 0x2:
                 if (funct7 != 0x00)
                         return false;
@@ -58,6 +64,15 @@ execute_r_type(rv32_t *cpu, uint32 instr)
                 if (funct7 != 0x00)
                         return false;
                 result = a ^ b;
+                break;
+
+        case 0x5:
+                if (funct7 == 0x00)
+                        result = a >> (b & 0x1F);
+                else if (funct7 == 0x20)
+                        result = (uint32)((int32)a >> (b & 0x1F));
+                else
+                        return false;
                 break;
 
         case 0x6:
@@ -90,6 +105,10 @@ execute_i_type(rv32_t *cpu, uint32 instr)
 
         int32 imm = (int32)instr >> 20;
 
+        uint32 shamt = (instr >> 20) & 0x1F;
+        uint32 funct7 = (instr >> 25) & 0x7F;
+
+
         uint32 a = reg_read_x(cpu, rs1);
         uint32 result = 0;
 
@@ -97,6 +116,12 @@ execute_i_type(rv32_t *cpu, uint32 instr)
 
         case 0x0:
                 result = a + (uint32)imm;
+                break;
+
+        case 0x1:
+                if (funct7 != 0x00)
+                        return false;
+                result = a << shamt;
                 break;
 
         case 0x2:
@@ -109,6 +134,15 @@ execute_i_type(rv32_t *cpu, uint32 instr)
 
         case 0x4:
                 result = a ^ (uint32)imm;
+                break;
+
+        case 0x5:
+                if (funct7 == 0x00)
+                        result = a >> shamt;
+                else if (funct7 == 0x20)
+                        result = (uint32)((int32)a >> shamt);
+                else
+                        return false;
                 break;
 
         case 0x6:
@@ -127,6 +161,32 @@ execute_i_type(rv32_t *cpu, uint32 instr)
         return true;
 }
 
+static bool
+execute_u_type(rv32_t *cpu, uint32 instr)
+{
+        uint32 rd = (instr >> 7) & 0x1F;
+        uint32 opcode = instr & 0x7F;
+
+        uint32 imm = instr & 0xFFFFF000;
+        uint32 result = 0;
+
+        switch (opcode) {
+
+        case 0x37:
+                result = imm;
+                break;
+
+        case 0x17:
+                result = cpu->pc + imm;
+                break;
+
+        default:
+                return false;
+        }
+
+        reg_write_x(cpu, rd, result);
+        return true;
+}
 
 void 
 execute(rv32_t *cpu)
@@ -156,6 +216,14 @@ execute(rv32_t *cpu)
 
         case 0x13:
                 valida = execute_i_type(cpu, instruccion);
+                break;
+
+        case 0x37:
+                valida = execute_u_type(cpu, instruccion);
+                break;
+
+        case 0x17:
+                valida = execute_u_type(cpu, instruccion);
                 break;
 
         default:

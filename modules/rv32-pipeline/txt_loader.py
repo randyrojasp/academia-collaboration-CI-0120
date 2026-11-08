@@ -19,9 +19,12 @@ INSTRUCTIONS = {
 R_TYPE = {
     "add": (0b000, 0b0000000),
     "sub": (0b000, 0b0100000),
+    "sll": (0b001, 0b0000000),
     "slt": (0b010, 0b0000000),
     "sltu": (0b011, 0b0000000),
     "xor": (0b100, 0b0000000),
+    "srl": (0b101, 0b0000000),
+    "sra": (0b101, 0b0100000),
     "or": (0b110, 0b0000000),
     "and": (0b111, 0b0000000),
 }
@@ -33,6 +36,14 @@ I_TYPE = {
     "xori": 0b100,
     "ori": 0b110,
     "andi": 0b111,
+    "slli": 0b001,
+    "srli": 0b101,
+    "srai": 0b101,
+}
+
+U_TYPE = {
+    "lui": 0b0110111,
+    "auipc": 0b0010111,
 }
 
 def register(text):
@@ -59,11 +70,24 @@ def immediate_12(text):
         raise ValueError(f"immediate out of range [-2048, 2047]: {number}")
     return number & 0b111111111111
 
+def immediate_20(text):
+    number = immediate(text)
+
+    if not -(1 << 19) <= number <= (1 << 20) - 1:
+        raise ValueError(
+            f"immediate out of range: {number}"
+        )
+
+    return number & 0xFFFFF
+
 def encode_r(rd, rs1, rs2, funct3, funct7):
     return ((funct7 << 25) | (rs2 << 20) | (rs1 << 15) | (funct3 << 12) | (rd << 7) | 0b0110011)
 
 def encode_i(rd, rs1, imm, funct3, opcode=0b0010011):
     return ((imm << 20) | (rs1 << 15) | (funct3 << 12) | (rd << 7) | opcode)
+
+def encode_u(rd, imm, opcode):
+    return ((imm << 12) | (rd << 7) | opcode)
 
 def assemble(line):
     line = line.split("#", 1)[0].strip().lower()
@@ -77,6 +101,16 @@ def assemble(line):
         if args:
             raise ValueError("ebreak: expected 0 operands")
         return 0x00100073
+
+    if name in U_TYPE:
+        if len(args) != 2:
+            raise ValueError(f"{name}: expected 2 operands")
+
+        rd = register(args[0])
+        imm = immediate_20(args[1])
+
+        return encode_u(rd, imm, U_TYPE[name])
+
     if name not in R_TYPE and name not in I_TYPE:
         raise ValueError(f"unsupported instruction: {name}")
 
@@ -90,6 +124,19 @@ def assemble(line):
         rs2 = register(args[2])
         funct3, funct7 = R_TYPE[name]
         return encode_r(rd, rs1, rs2, funct3, funct7)
+
+    if name in ("slli", "srli", "srai"):
+        shamt = immediate(args[2])
+
+        if not 0 <= shamt <= 31:
+            raise ValueError(f"shift amount out of range [0, 31]: {shamt}")
+
+        imm = shamt
+
+        if name == "srai":
+            imm |= 0b0100000 << 5
+
+        return encode_i(rd, rs1, imm, I_TYPE[name])
 
     imm = immediate_12(args[2])
     return encode_i(rd, rs1, imm, I_TYPE[name])
