@@ -11,13 +11,124 @@
   implied warranties, other than those that are expressly stated in the License.
 */
 
+#include <stdbool.h>
 #include <simics/util/strbuf.h>
 
 #include "cosim.h"
 #include "rv32-core.h"
 #include "rv32-helpers.h"
 
-void
+static bool 
+execute_r_type(rv32_t *cpu, uint32 instr)
+{
+        uint32 rd = (instr >> 7) & 0x1F;
+        uint32 funct3 = (instr >> 12) & 0x07;
+        uint32 rs1 = (instr >> 15) & 0x1F;
+        uint32 rs2 = (instr >> 20) & 0x1F;
+        uint32 funct7 = (instr >> 25) & 0x7F;
+
+        uint32 a = reg_read_x(cpu, rs1);
+        uint32 b = reg_read_x(cpu, rs2);
+        uint32 result = 0;
+
+        switch (funct3) {
+
+        case 0x0:
+                if (funct7 == 0x00)
+                        result = a + b;
+                else if (funct7 == 0x20)
+                        result = a - b;
+                else
+                        return false;
+                break;
+
+        case 0x2:
+                if (funct7 != 0x00)
+                        return false;
+                result = (int32)a < (int32)b;
+                break;
+
+        case 0x3:
+                if (funct7 != 0x00)
+                        return false;
+                result = a < b;
+                break;
+
+        case 0x4:
+                if (funct7 != 0x00)
+                        return false;
+                result = a ^ b;
+                break;
+
+        case 0x6:
+                if (funct7 != 0x00)
+                        return false;
+                result = a | b;
+                break;
+
+        case 0x7:
+                if (funct7 != 0x00)
+                        return false;
+                result = a & b;
+                break;
+
+        default:
+                return false;
+        }
+
+        reg_write_x(cpu, rd, result);
+        return true;
+}
+
+
+static bool 
+execute_i_type(rv32_t *cpu, uint32 instr)
+{
+        uint32 rd = (instr >> 7) & 0x1F;
+        uint32 funct3 = (instr >> 12) & 0x07;
+        uint32 rs1 = (instr >> 15) & 0x1F;
+
+        int32 imm = (int32)instr >> 20;
+
+        uint32 a = reg_read_x(cpu, rs1);
+        uint32 result = 0;
+
+        switch (funct3) {
+
+        case 0x0:
+                result = a + (uint32)imm;
+                break;
+
+        case 0x2:
+                result = (int32)a < imm;
+                break;
+
+        case 0x3:
+                result = a < (uint32)imm;
+                break;
+
+        case 0x4:
+                result = a ^ (uint32)imm;
+                break;
+
+        case 0x6:
+                result = a | (uint32)imm;
+                break;
+
+        case 0x7:
+                result = a & (uint32)imm;
+                break;
+
+        default:
+                return false;
+        }
+
+        reg_write_x(cpu, rd, result);
+        return true;
+}
+
+
+void 
 execute(rv32_t *cpu)
 {
         uint8 bytes[4];
@@ -34,9 +145,30 @@ execute(rv32_t *cpu)
                 ebreak(cpu);
                 return;
         }
-        // TODO(any): change that
-        illegal_instruction(cpu, cpu->pc, instruccion);
+        uint32 opcode = instruccion & 0x7F;
+        bool valida = false;
 
+        switch (opcode) {
+
+        case 0x33:
+                valida = execute_r_type(cpu, instruccion);
+                break;
+
+        case 0x13:
+                valida = execute_i_type(cpu, instruccion);
+                break;
+
+        default:
+                break;
+        }
+
+        if (!valida) {
+                illegal_instruction(cpu, cpu->pc, instruccion);
+                return;
+        }
+        cpu->pc += 4;
+        increment_step(cpu);
+        increment_cycle(cpu);
 }
 
 /* Text for Simics' disassemble CLI command (e.g. "disassemble 0x0 10")
