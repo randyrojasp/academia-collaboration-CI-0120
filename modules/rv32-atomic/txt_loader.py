@@ -9,6 +9,8 @@
 # This software and the related documents are provided as is, with no express or
 # implied warranties, other than those that are expressly stated in the License.
 
+import re
+
 import simics
 INSTRUCTIONS = {
     "ebreak": 0x00100073,
@@ -42,6 +44,15 @@ I_TYPE = {
 U_TYPE = {
     "lui": 0b0110111,
     "auipc": 0b0010111,
+}
+
+B_TYPE = {
+    "beq": 0b000,
+    "bne": 0b001,
+    "blt": 0b100,
+    "bge": 0b101,
+    "bltu": 0b110,
+    "bgeu": 0b111,
 }
 
 def register(text):
@@ -87,6 +98,28 @@ def encode_i(rd, rs1, imm, funct3, opcode=0b0010011):
 def encode_u(rd, imm, opcode):
     return ((imm << 12) | (rd << 7) | opcode)
 
+def relative_offset(text, bits):
+    """Validate a signed, two-byte-aligned branch/jump displacement."""
+    number = immediate(text)
+    lower = -(1 << (bits - 1))
+    upper = (1 << (bits - 1)) - 2
+    if not lower <= number <= upper or number % 2:
+        raise ValueError(f"offset must be even and in [{lower}, {upper}]: {number}")
+    return number & ((1 << bits) - 1)
+
+def encode_b(rs1, rs2, imm, funct3):
+    return (((imm >> 12) & 1) << 31
+            | ((imm >> 5) & 0x3f) << 25
+            | rs2 << 20 | rs1 << 15 | funct3 << 12
+            | ((imm >> 1) & 0xf) << 8
+            | ((imm >> 11) & 1) << 7 | 0b1100011)
+
+def encode_j(rd, imm):
+    return (((imm >> 20) & 1) << 31
+            | ((imm >> 1) & 0x3ff) << 21
+            | ((imm >> 11) & 1) << 20
+            | ((imm >> 12) & 0xff) << 12 | rd << 7 | 0b1101111)
+
 def assemble(line):
     line = line.split("#", 1)[0].strip().lower()
     if not line:
@@ -108,6 +141,27 @@ def assemble(line):
         imm = immediate_20(args[1])
 
         return encode_u(rd, imm, U_TYPE[name])
+
+    if name == "jalr":
+        if len(args) != 2:
+            raise ValueError("jalr: expected 2 operands")
+        operand = re.fullmatch(r"([^()]+)\(\s*(x[0-9]+)\s*\)", args[1])
+        if operand is None:
+            raise ValueError("jalr: expected rd, offset(rs1)")
+        imm = immediate_12(operand.group(1))
+        return encode_i(register(args[0]), register(operand.group(2)),
+                        imm, 0, opcode=0b1100111)
+
+    if name == "jal":
+        if len(args) != 2:
+            raise ValueError("jal: expected 2 operands")
+        return encode_j(register(args[0]), relative_offset(args[1], 21))
+
+    if name in B_TYPE:
+        if len(args) != 3:
+            raise ValueError(f"{name}: expected 3 operands")
+        return encode_b(register(args[0]), register(args[1]),
+                        relative_offset(args[2], 13), B_TYPE[name])
 
     if name not in R_TYPE and name not in I_TYPE:
         raise ValueError(f"unsupported instruction: {name}")

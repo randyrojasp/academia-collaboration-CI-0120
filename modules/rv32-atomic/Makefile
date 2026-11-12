@@ -28,6 +28,7 @@ SRC_FILES += rv32-core.c
 # Helper functions for your core
 SRC_FILES += rv32-helpers.c
 
+SRC_FILES += rv32-decoder.c rv32-evaluate.c
 # Simics plumbing: the cosimulator (cosim.c and cosim-*.c: clock, events,
 # memory) and its core object (cosim-core.c)
 SRC_FILES += cosim.c cosim-core.c cosim-queue.c \
@@ -37,7 +38,7 @@ SRC_FILES += cosim.c cosim-core.c cosim-queue.c \
 
 PYTHON_FILES = module_load.py txt_loader.py
 
-EXTRA_MODULE_VPATH = cycle-common
+EXTRA_MODULE_VPATH = cycle-common rv32-common
 
 MODULE_CFLAGS += -I$(SIMICS_REPO_ROOT)/core/src/include
 

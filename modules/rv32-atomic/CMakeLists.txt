@@ -30,3 +30,8 @@ target_link_libraries(rv32-atomic
 target_compile_definitions(rv32-atomic PRIVATE
   COSIM_CLASSNAME=rv32-atomic
   COSIM_CORE_CLASSNAME=rv32-atomic-core)
+
+target_sources(rv32-atomic PRIVATE
+  "${CMAKE_CURRENT_LIST_DIR}/../rv32-common/rv32-decoder.c"
+  "${CMAKE_CURRENT_LIST_DIR}/../rv32-common/rv32-evaluate.c"
+)
