@@ -30,3 +30,8 @@ target_link_libraries(rv32-pipeline
 target_compile_definitions(rv32-pipeline PRIVATE
   COSIM_CLASSNAME=rv32-pipeline
   COSIM_CORE_CLASSNAME=rv32-pipeline-core)
+
+target_sources(rv32-pipeline PRIVATE
+  "${CMAKE_CURRENT_LIST_DIR}/../rv32-common/rv32-decoder.c"
+  "${CMAKE_CURRENT_LIST_DIR}/../rv32-common/rv32-evaluate.c"
+)

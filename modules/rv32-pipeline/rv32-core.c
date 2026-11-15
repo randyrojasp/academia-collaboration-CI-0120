@@ -34,7 +34,11 @@ rv32_get_pc(cosim_core_t *core)
 void
 rv32_set_pc(cosim_core_t *core, logical_address_t pc)
 {
-        rv32_from_core(core)->pc = (uint32)pc;
+        rv32_t *cpu = rv32_from_core(core);
+        cpu->pc = (uint32)pc;
+        cpu->if_stage.valid = 0;
+        cpu->ex_stage.valid = cpu->wb_stage.valid = 0;
+        cpu->fetch_stopped = 0;
 }
 
 /*
@@ -102,11 +106,11 @@ rv32_execute(cosim_core_t *core)
         execute(rv32_from_core(core));
 }
 
-bool
+int
 read_simics_memory(rv32_t *cpu, uint32 addr, uint8 *buf, unsigned len)
 {
         /* An instruction-fetch access to the core's physical memory space */
-        return cosim_core_fetch_instruction(cpu->core, addr, len, buf, true);
+        return cosim_core_fetch_instruction(cpu->core, addr, len, buf, 1);
 }
 
 void

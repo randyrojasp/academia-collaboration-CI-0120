@@ -15,8 +15,18 @@
 #define RV32_CORE_H
 
 #include "cosim-core.h"
+#include "../rv32-common/rv32-evaluate.h"
 
 #define RV32_NUM_REGS   32
+
+typedef struct rv32_pipeline_slot {
+        int valid;
+        int fetch_error;
+        uint32 pc;
+        uint32 word;
+        rv32_decoded_t instruction;
+        rv32_result_t result;
+} rv32_pipeline_slot_t;
 
 typedef struct rv32 {
         cosim_core_t *core;  /* pass to cosim_core_* functions */
@@ -25,9 +35,12 @@ typedef struct rv32 {
         uint32 pc;
         uint32 x[RV32_NUM_REGS];   /* use reg_read_x/reg_write_x: x0 is zero */
 
+        rv32_pipeline_slot_t if_stage, ex_stage, wb_stage;
+        int fetch_stopped;
+
 } rv32_t;
 
-bool read_simics_memory(rv32_t *cpu, uint32 addr, uint8 *buf, unsigned len);
+int read_simics_memory(rv32_t *cpu, uint32 addr, uint8 *buf, unsigned len);
 
 void rv32_halt(rv32_t *cpu, const char *reason);
 
