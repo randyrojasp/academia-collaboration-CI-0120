@@ -66,6 +66,8 @@ execute(rv32_t *cpu)
         break;
 
     case RV32_EXEC_EBREAK:
+        increment_step(cpu);
+        increment_cycle(cpu);
         ebreak(cpu);
         return;
 

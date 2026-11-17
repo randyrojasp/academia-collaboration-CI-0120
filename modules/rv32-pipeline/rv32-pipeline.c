@@ -63,9 +63,10 @@ writeback(rv32_t *cpu, rv32_pipeline_slot_t previous_wb)
                         cpu->fetch_stopped = 0;
                         if (previous_wb.fetch_error != 0)
                                 rv32_halt(cpu, "Error reading instruction");
-                        else if (previous_wb.result.status == RV32_EXEC_EBREAK)
+                        else if (previous_wb.result.status == RV32_EXEC_EBREAK) {
+                                increment_step(cpu);
                                 ebreak(cpu);
-                        else if (previous_wb.result.status == RV32_EXEC_MISALIGNED)
+                        } else if (previous_wb.result.status == RV32_EXEC_MISALIGNED)
                                 rv32_halt(cpu, "Misaligned instruction target");
                         else
                                 illegal_instruction(cpu, previous_wb.pc, previous_wb.word);
