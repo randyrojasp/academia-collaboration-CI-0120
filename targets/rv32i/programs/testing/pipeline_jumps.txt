@@ -1,0 +1,15 @@
+# Salto con JAL
+jal x5, 12           # x5 = 4, salta a 0x0C
+addi x1, x0, 99      # No se ejecuta: x1 = 0
+addi x2, x0, 99      # No se ejecuta: x2 = 0
+addi x3, x0, 3       # x3 = 3
+
+# Salto con JALR
+addi x6, x0, 33      # x6 = 33
+jalr x7, 0(x6)       # x7 = 24, limpia el bit 0 y salta a 32
+addi x8, x0, 88      # No se ejecuta: x8 = 0
+addi x9, x0, 99      # No se ejecuta: x9 = 0
+addi x10, x5, 1      # x10 = 5
+addi x11, x7, 1      # x11 = 25
+
+ebreak               # pc = 0x28

@@ -1,0 +1,6 @@
+# Salto a una dirección desalineada
+addi x1, x0, 7       # x1 = 7
+jal x5, 2            # Error de alineación: pc = 0x04, x5 = 0
+addi x2, x0, 99      # No se ejecuta: x2 = 0
+
+ebreak               # No se ejecuta

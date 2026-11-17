@@ -1,0 +1,7 @@
+# La rama descarta una instrucción ilegal
+addi x1, x0, 1       # x1 = 1
+beq x1, x1, 8        # Salta la siguiente instrucción
+.word 0xffffffff     # No se ejecuta
+addi x2, x0, 7       # x2 = 7
+
+ebreak               # pc = 0x10

@@ -14,7 +14,10 @@ decl {
     ! modules/rv32-pipeline, RAM at address 0, and a program loaded into RAM.
     ! Run the program with "run"; it stops at its EBREAK.
 
-    params from "rv32.simics" except cpu_class
+    param program : file("*") or nil = "%script%/programs/all-instructions.txt"
+    param load_address : int = 0
+    param ram_size : int = 0x100000
+    param freq_mhz : float = 100.0
 }
 
-run-script "%script%/rv32.simics" cpu_class = "rv32-pipeline"
+run-script "%script%/rv32.simics" cpu_class = "rv32-pipeline" program = $program load_address = $load_address ram_size = $ram_size freq_mhz = $freq_mhz

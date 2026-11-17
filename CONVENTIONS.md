@@ -25,6 +25,8 @@ Programs are text files (`.txt`) in RV32I assembly.
   `20`, `-8`, `+16`, `0xff`.
 - The target of a branch or `jal` is a byte offset from that instruction.
 - No labels, no pseudo-instructions.
+- `.word value` writes an unsigned 32-bit value directly, for example to test
+  an unsupported instruction.
 - The first instruction is placed at the load address, expected to be 0x0.
 - `ebreak` ends the program.
 

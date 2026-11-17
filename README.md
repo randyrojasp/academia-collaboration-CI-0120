@@ -83,3 +83,9 @@ quit
 `run` runs the program until its `ebreak`.
 
 `pregs` shows the registers.
+
+## Pipeline tests
+
+Run an individual pipeline program with `make test=pipeline_branches.txt`.
+See the [test instructions](tests/README.md) for the project path and more
+options.

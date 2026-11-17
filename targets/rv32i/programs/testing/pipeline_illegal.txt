@@ -1,0 +1,6 @@
+# Instrucción ilegal
+addi x1, x0, 7       # x1 = 7
+.word 0xffffffff     # Se detiene con pc = 0x04
+addi x2, x0, 99      # No se ejecuta: x2 = 0
+
+ebreak               # No se ejecuta

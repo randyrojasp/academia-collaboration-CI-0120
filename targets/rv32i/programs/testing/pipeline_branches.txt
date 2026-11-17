@@ -1,0 +1,38 @@
+# Ciclo con salto hacia atrás
+addi x1, x0, -1      # x1 = -1
+addi x2, x0, 1       # x2 = 1
+addi x3, x0, 0       # x3 = 0
+addi x4, x0, 3       # x4 = 3
+addi x3, x3, 1       # x3 aumenta hasta 3
+addi x4, x4, -1      # x4 disminuye hasta 0
+bne x4, x0, -8       # Repite mientras x4 sea distinto de 0
+addi x5, x0, 1       # x5 = 1
+
+# Ramas tomadas y no tomadas
+beq x3, x4, 8        # No salta: 3 es distinto de 0
+addi x6, x0, 6       # x6 = 6
+beq x3, x3, 8        # Salta la siguiente instrucción
+addi x7, x0, 77      # No se ejecuta: x7 = 0
+addi x8, x0, 8       # x8 = 8
+
+# Comparaciones con signo
+blt x1, x2, 8        # Salta: -1 es menor que 1
+addi x9, x0, 99      # No se ejecuta: x9 = 0
+bge x1, x2, 8        # No salta: -1 es menor que 1
+addi x10, x0, 10     # x10 = 10
+
+# Comparaciones con y sin signo
+bltu x1, x2, 8       # No salta: 0xFFFFFFFF es mayor que 1
+addi x11, x0, 11     # x11 = 11
+bgeu x1, x2, 8       # Salta: 0xFFFFFFFF es mayor que 1
+addi x12, x0, 12     # No se ejecuta: x12 = 0
+bge x2, x1, 8        # Salta: 1 es mayor que -1
+addi x13, x0, 13     # No se ejecuta: x13 = 0
+bltu x2, x1, 8       # Salta: 1 es menor que 0xFFFFFFFF
+addi x14, x0, 14     # No se ejecuta: x14 = 0
+blt x2, x1, 8        # No salta: 1 no es menor que -1
+addi x15, x0, 15     # x15 = 15
+bgeu x2, x1, 8       # No salta: 1 es menor que 0xFFFFFFFF
+addi x16, x0, 16     # x16 = 16
+
+ebreak               # pc = 0x74

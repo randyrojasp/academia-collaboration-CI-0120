@@ -1,0 +1,6 @@
+# Salto fuera de la RAM predeterminada de 1 MiB
+lui x1, 0x100        # x1 = 0x00100000
+jalr x2, 0(x1)       # x2 = 8, salta a 0x00100000
+addi x3, x0, 99      # No se ejecuta: x3 = 0
+
+ebreak               # No se ejecuta; error de lectura en 0x00100000

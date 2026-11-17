@@ -128,6 +128,14 @@ def assemble(line):
     parts = line.split(None, 1)
     name = parts[0]
     args = [item.strip() for item in parts[1].split(",")] if len(parts) == 2 else []
+    if name == ".word":
+        if len(args) != 1:
+            raise ValueError(".word: expected 1 operand")
+        word = immediate(args[0])
+        if not 0 <= word <= 0xffffffff:
+            raise ValueError(".word: expected an unsigned 32-bit value")
+        return word
+
     if name == "ebreak":
         if args:
             raise ValueError("ebreak: expected 0 operands")
