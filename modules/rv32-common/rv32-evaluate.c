@@ -91,8 +91,6 @@ rv32_evaluate(
     case RV32_OP_AUIPC:
         result.value = instruction_pc + immediate;
         break;
-
-    /* Las ramas comparan los dos registros. */
     case RV32_OP_BEQ:
         take_branch = operand_a == operand_b;
         break;
